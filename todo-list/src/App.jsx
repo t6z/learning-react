@@ -1,10 +1,8 @@
 import { useState } from 'react'
-import './App.css'
 
 function TodoList({items, handleDelete, handleEdit}) {
-  const listItems = items.map((item,index) => (
+  const listItems = items.map((item) => (
     <TodoItem
-      index={index}
       item={item}
       handleDelete={handleDelete}
       handleEdit={handleEdit}
@@ -20,19 +18,19 @@ function TodoList({items, handleDelete, handleEdit}) {
   )
 }
 
-function TodoItem({index, item, handleDelete, handleEdit}) {
+function TodoItem({item, handleDelete, handleEdit}) {
   const [editing,setEditing] = useState(false);
   const [newText, setNewText] = useState("");
 
   function finishEditing() {
     setEditing(false);
-    handleEdit(index, newText);
+    handleEdit(item.id, newText);
   }
 
   if (editing) {
     return (
       <li
-        key={index}
+        key={item.id}
       >
         <input onChange={(e) => setNewText(e.target.value)}/>
         <button onClick={() => finishEditing()}>done editing</button>
@@ -41,10 +39,10 @@ function TodoItem({index, item, handleDelete, handleEdit}) {
   } else {
     return (
       <li
-        key={index}
+        key={item.id}
       >
-        {item}
-        <button onClick={() => handleDelete(index)}>delete</button>
+        {item.name}
+        <button onClick={() => handleDelete(item.id)}>delete</button>
         <button onClick={() => setEditing(true)}>edit</button>
       </li>
     )
@@ -67,23 +65,38 @@ function FilterTodo() {
 }
 
 export default function App() {
-  const [items, setItems] = useState(["one","two","three"]);
+  const [items, setItems] = useState([
+    {id: 0, name: "one"},
+    {id: 1, name: "two"},
+    {id: 2, name: "three"}]);
   const [addItem, setAddItem] = useState("");
 
   function handleAddTodo() {
     if (addItem === "") {
       return;
     }
-    setItems([...items, addItem]);
+    const newItem = { id: items.length, name:addItem };
+    setItems([...items, newItem]);
   }
 
-  function handleDeleteTodo(index) {
-    setItems([...items].toSpliced(index,1));
+  function handleDeleteTodo(id) {
+    // Remove item
+    const updatedItems = items.filter(item => item.id !== id);
+
+    // Reassign keys
+    const rekeyedItems = updatedItems.map((item, index) => ({
+      ...item,
+      id: index,
+    }));
+
+    // Set Items
+    setItems(rekeyedItems);
   }
 
-  function handleEditTodo(index, newText) {
-    const newItems = [...items];
-    newItems[index] = newText;
+  function handleEditTodo(id, newText) {
+    const newItems = items.map((item) => (
+      item.id === id ? { ...item, name: newText } : item
+    ));
     setItems(newItems);
   }
 
