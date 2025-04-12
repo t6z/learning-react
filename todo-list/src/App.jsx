@@ -1,118 +1,86 @@
-import { useState } from 'react'
+import React, { useState } from 'react';
 
-function TodoList({items, handleDelete, handleEdit}) {
-  const listItems = items.map((item) => (
-    <TodoItem
-      item={item}
-      handleDelete={handleDelete}
-      handleEdit={handleEdit}
-    />
-  ))
+const TodoApp = () => {
+  const [tasks, setTasks] = useState([]);
+  const [input, setInput] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState('');
 
-  return (
-    <>
-    <ul>
-      {listItems}
-    </ul>
-    </>
-  )
-}
-
-function TodoItem({item, handleDelete, handleEdit}) {
-  const [editing,setEditing] = useState(false);
-  const [newText, setNewText] = useState("");
-
-  function finishEditing() {
-    setEditing(false);
-    handleEdit(item.id, newText);
-  }
-
-  if (editing) {
-    return (
-      <li
-        key={item.id}
-      >
-        <input onChange={(e) => setNewText(e.target.value)}/>
-        <button onClick={() => finishEditing()}>done editing</button>
-      </li>
-    )
-  } else {
-    return (
-      <li
-        key={item.id}
-      >
-        {item.name}
-        <button onClick={() => handleDelete(item.id)}>delete</button>
-        <button onClick={() => setEditing(true)}>edit</button>
-      </li>
-    )
-  }
-}
-
-function AddTodo({handleChange, handleAdd}) {
-  return (
-    <>
-      <input
-        onChange={(e) => handleChange(e.target.value)}
-      />
-      <button onClick={handleAdd}>Add</button>
-    </>
-  )
-}
-
-function FilterTodo() {
-
-}
-
-export default function App() {
-  const [items, setItems] = useState([
-    {id: 0, name: "one"},
-    {id: 1, name: "two"},
-    {id: 2, name: "three"}]);
-  const [addItem, setAddItem] = useState("");
-
-  function handleAddTodo() {
-    if (addItem === "") {
-      return;
+  const addTask = () => {
+    if (input.trim() !== '') {
+      setTasks([...tasks, { id: Date.now(), text: input, done: false }]);
+      setInput('');
     }
-    const newItem = { id: items.length, name:addItem };
-    setItems([...items, newItem]);
-  }
+  };
 
-  function handleDeleteTodo(id) {
-    // Remove item
-    const updatedItems = items.filter(item => item.id !== id);
+  const toggleTask = (id) => {
+    setTasks(
+      tasks.map(task =>
+        task.id === id ? { ...task, done: !task.done } : task
+      )
+    );
+  };
 
-    // Reassign keys
-    const rekeyedItems = updatedItems.map((item, index) => ({
-      ...item,
-      id: index,
-    }));
+  const deleteTask = (id) => {
+    setTasks(tasks.filter(task => task.id !== id));
+  };
 
-    // Set Items
-    setItems(rekeyedItems);
-  }
+  const startEditing = (id, text) => {
+    setEditingId(id);
+    setEditText(text);
+  };
 
-  function handleEditTodo(id, newText) {
-    const newItems = items.map((item) => (
-      item.id === id ? { ...item, name: newText } : item
-    ));
-    setItems(newItems);
-  }
+  const saveEdit = (id) => {
+    if (editText.trim() !== '') {
+      setTasks(
+        tasks.map(task =>
+          task.id === id ? { ...task, text: editText } : task
+        )
+      );
+      setEditingId(null);
+      setEditText('');
+    }
+  };
 
   return (
-    <>
-    <h1>TODO List</h1>
-    <AddTodo
-      handleChange={(val) => setAddItem(val)}
-      handleAdd={() => handleAddTodo()}
-    />
-    <FilterTodo />
-    <TodoList
-      items={items}
-      handleDelete={(index) => handleDeleteTodo(index)}
-      handleEdit={(index, newText) => handleEditTodo(index, newText)}
-    />
-    </>
-  )
-}
+    <div>
+      <h1>Todo App</h1>
+      <input
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="Add a new task"
+      />
+      <button onClick={addTask}>Add</button>
+      <ul>
+        {tasks.map(task => (
+          <li key={task.id}>
+            {editingId === task.id ? (
+              <>
+                <input
+                  type="text"
+                  value={editText}
+                  onChange={(e) => setEditText(e.target.value)}
+                />
+                <button onClick={() => saveEdit(task.id)}>Save</button>
+              </>
+            ) : (
+              <>
+                <span
+                  onClick={() => toggleTask(task.id)}
+                  style={{ textDecoration: task.done ? 'line-through' : 'none' }}
+                >
+                  {task.text}
+                </span>
+                <button onClick={() => startEditing(task.id, task.text)}>Edit</button>
+                <button onClick={() => deleteTask(task.id)}>Delete</button>
+              </>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+export default TodoApp;
