@@ -1,10 +1,24 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
-function App() {
-  const [quote, setQuote] = useState("");
+export default function App() {
+  const [fact, setFact] = useState("");
   const [loading, setLoading] = useState(false);
+  const [dots, setDots] = useState(0);
 
-  const fetchQuote = async () => {
+  useEffect(() => {
+    if (loading) {
+      const interval = setInterval(() => {
+        setDots(prev => (prev < 10 ? prev + 1 : 0));
+      }, 100);
+      // cleanup function
+      return () => {
+        clearInterval(interval);
+        setDots(0);
+      }
+    }
+  }, [loading]);
+
+  const fetchFact = async () => {
     setLoading(true);
     try {
       const response = await fetch('https://dogapi.dog/api/v2/facts');
@@ -12,7 +26,7 @@ function App() {
       const result = await response.json();
 
       if (result.data[0].attributes.body) {
-        setQuote(result.data[0].attributes.body);
+        setFact(result.data[0].attributes.body);
         console.log(result);
       } else {
         console.error('API did not respond appropriately:',result);
@@ -24,15 +38,17 @@ function App() {
     }
   }
 
+  useEffect(() => {
+    fetchFact();
+  }, []);
+
   return (
     <>
       <h1>Dog Fact Generator</h1>
-      <button onClick={() => fetchQuote()}>
-        { loading ? 'Loading...' : 'Fetch fact' }
+      <button onClick={() => fetchFact()}>
+        { loading ? 'Loading'+'.'.repeat(dots) : 'Fetch fact' }
       </button>
-      <div>{quote}</div>
+      <div>{fact}</div>
     </>
   )
 }
-
-export default App
